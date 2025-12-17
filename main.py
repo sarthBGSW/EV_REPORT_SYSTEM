@@ -18,7 +18,14 @@ try:
         from dotenv import load_dotenv
         load_dotenv()
 except Exception as e:
-    st.warning(f"Note: Environment variables not loaded: {str(e)}")
+    st.error(f"⚠️ Failed to load environment variables: {str(e)}")
+    st.stop()
+
+# Verify required secrets are present
+if not os.getenv('AZURE_OPENAI_KEY') or not os.getenv('AZURE_OPENAI_ENDPOINT'):
+    st.error("🔑 Missing Azure OpenAI credentials! Please configure secrets in Streamlit Cloud settings.")
+    st.info("Required secrets: AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT")
+    st.stop()
 
 from docx import Document
 from docx.shared import Pt, Inches

@@ -115,16 +115,38 @@ def get_llm(model_type="gpt-5-mini"):
         # 4. Local Ollama Models (Best for summarization & cost saving)
         elif model_type == "deepseek-r1":
             print(f"[LLM FACTORY] Using local Ollama model: deepseek-r1:8b", file=sys.stderr)
-            return ChatOllama(model="deepseek-r1:8b", temperature=0.6)
+            try:
+                # Check if Ollama is available before initializing
+                import requests
+                requests.get("http://localhost:11434", timeout=2)
+                return ChatOllama(model="deepseek-r1:8b", temperature=0.6)
+            except Exception as ollama_err:
+                print(f"[LLM FACTORY WARNING] Ollama not available: {ollama_err}", file=sys.stderr)
+                raise ConnectionError("Ollama service not available")
         
         elif model_type == "llama3.2":
             print(f"[LLM FACTORY] Using local Ollama model: llama3.2", file=sys.stderr)
-            return ChatOllama(model="llama3.2:latest", temperature=0.5)
+            try:
+                # Check if Ollama is available before initializing
+                import requests
+                requests.get("http://localhost:11434", timeout=2)
+                return ChatOllama(model="llama3.2:latest", temperature=0.5)
+            except Exception as ollama_err:
+                print(f"[LLM FACTORY WARNING] Ollama not available: {ollama_err}", file=sys.stderr)
+                raise ConnectionError("Ollama service not available")
 
         else:
             # Fallback
-            print(f"[LLM FACTORY] Unknown model type '{model_type}', falling back to mistral", file=sys.stderr)
-            return ChatOllama(model="mistral:latest")
+            print(f"[LLM FACTORY] Unknown model type '{model_type}', falling back to GPT-5 Mini", file=sys.stderr)
+            return AzureChatOpenAI(
+                azure_deployment="gpt-5-mini",
+                api_version="2024-05-01-preview",
+                azure_endpoint=azure_endpoint,
+                api_key=azure_key,
+                temperature=1.0,
+                timeout=120,
+                max_retries=2
+            )
             
     except Exception as e:
         print(f"\n[LLM FACTORY ERROR] Failed to initialize {model_type}: {str(e)}", file=sys.stderr)
