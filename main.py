@@ -14,21 +14,26 @@ print("[MAIN] ✓ Streamlit page config set", file=sys.stderr)
 # Load environment variables - works both locally and on Streamlit Cloud
 print("[MAIN] Loading environment variables...", file=sys.stderr)
 try:
-    # Try Streamlit Cloud secrets first
-    if hasattr(st, 'secrets') and len(st.secrets) > 0:
-        print("[MAIN] Using Streamlit Cloud secrets", file=sys.stderr)
-        os.environ['AZURE_OPENAI_KEY'] = st.secrets.get('AZURE_OPENAI_KEY', '')
-        os.environ['AZURE_OPENAI_ENDPOINT'] = st.secrets.get('AZURE_OPENAI_ENDPOINT', '')
-        os.environ['AZURE_ANTHROPIC_KEY'] = st.secrets.get('AZURE_ANTHROPIC_KEY', '')
-        os.environ['AZURE_ANTHROPIC_ENDPOINT'] = st.secrets.get('AZURE_ANTHROPIC_ENDPOINT', '')
-    else:
-        # Fall back to .env file for local development
-        print("[MAIN] Using .env file", file=sys.stderr)
-        from dotenv import load_dotenv
-        load_dotenv()
+    # For local development, just use .env file
+    # For Streamlit Cloud, use secrets
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    # On Streamlit Cloud, override with secrets if available
+    try:
+        if hasattr(st, 'secrets'):
+            for key in ['AZURE_OPENAI_KEY', 'AZURE_OPENAI_ENDPOINT', 'AZURE_ANTHROPIC_KEY', 'AZURE_ANTHROPIC_ENDPOINT']:
+                if key in st.secrets:
+                    os.environ[key] = st.secrets[key]
+                    print(f"[MAIN] Using secret for {key}", file=sys.stderr)
+    except Exception:
+        pass  # Secrets not available, use .env values
+    
     print("[MAIN] ✓ Environment variables loaded", file=sys.stderr)
 except Exception as e:
-    print(f"[MAIN] ❌ Failed to load environment: {e}", file=sys.stderr)
+    print(f"[MAIN] ❌ Unexpected error loading environment: {e}", file=sys.stderr)
+    import traceback
+    traceback.print_exc(file=sys.stderr)
     st.error(f"⚠️ Failed to load environment variables: {str(e)}")
     st.stop()
 
