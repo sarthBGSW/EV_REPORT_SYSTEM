@@ -2,38 +2,67 @@ import streamlit as st
 import os
 import sys
 
+print("=" * 60, file=sys.stderr)
+print("[MAIN] Starting EV Report Generator application...", file=sys.stderr)
+print(f"[MAIN] Python version: {sys.version}", file=sys.stderr)
+print("=" * 60, file=sys.stderr)
+
 # MUST be first Streamlit command
 st.set_page_config(page_title="Azure AI - Agentic Document Generator", layout="wide")
+print("[MAIN] ✓ Streamlit page config set", file=sys.stderr)
 
 # Load environment variables - works both locally and on Streamlit Cloud
+print("[MAIN] Loading environment variables...", file=sys.stderr)
 try:
     # Try Streamlit Cloud secrets first
     if hasattr(st, 'secrets') and len(st.secrets) > 0:
+        print("[MAIN] Using Streamlit Cloud secrets", file=sys.stderr)
         os.environ['AZURE_OPENAI_KEY'] = st.secrets.get('AZURE_OPENAI_KEY', '')
         os.environ['AZURE_OPENAI_ENDPOINT'] = st.secrets.get('AZURE_OPENAI_ENDPOINT', '')
         os.environ['AZURE_ANTHROPIC_KEY'] = st.secrets.get('AZURE_ANTHROPIC_KEY', '')
         os.environ['AZURE_ANTHROPIC_ENDPOINT'] = st.secrets.get('AZURE_ANTHROPIC_ENDPOINT', '')
     else:
         # Fall back to .env file for local development
+        print("[MAIN] Using .env file", file=sys.stderr)
         from dotenv import load_dotenv
         load_dotenv()
+    print("[MAIN] ✓ Environment variables loaded", file=sys.stderr)
 except Exception as e:
+    print(f"[MAIN] ❌ Failed to load environment: {e}", file=sys.stderr)
     st.error(f"⚠️ Failed to load environment variables: {str(e)}")
     st.stop()
 
 # Verify required secrets are present
+print("[MAIN] Verifying required secrets...", file=sys.stderr)
 if not os.getenv('AZURE_OPENAI_KEY') or not os.getenv('AZURE_OPENAI_ENDPOINT'):
+    print("[MAIN] ❌ Missing Azure credentials", file=sys.stderr)
     st.error("🔑 Missing Azure OpenAI credentials! Please configure secrets in Streamlit Cloud settings.")
     st.info("Required secrets: AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT")
     st.stop()
+print("[MAIN] ✓ Required secrets present", file=sys.stderr)
 
 from docx import Document
 from docx.shared import Pt, Inches
 from datetime import datetime
 import io
 
-from modules.tools import process_uploaded_files
-from workflow import app_graph
+# Import workflow after environment is configured
+print("[MAIN] Importing modules...", file=sys.stderr)
+try:
+    from modules.tools import process_uploaded_files
+    print("[MAIN] ✓ modules.tools imported", file=sys.stderr)
+    from workflow import app_graph
+    print("[MAIN] ✓ workflow imported", file=sys.stderr)
+except Exception as import_error:
+    print(f"[MAIN] ❌ Import failed: {import_error}", file=sys.stderr)
+    import traceback
+    traceback.print_exc(file=sys.stderr)
+    st.error(f"❌ Failed to import required modules: {str(import_error)}")
+    st.code(str(import_error))
+    st.code(traceback.format_exc())
+    st.stop()
+
+print("[MAIN] ✓ All imports successful", file=sys.stderr)
 
 # Initialize session state for document persistence
 if 'generated_document' not in st.session_state:
