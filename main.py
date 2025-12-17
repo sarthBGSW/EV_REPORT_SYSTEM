@@ -1,13 +1,24 @@
 import streamlit as st
 import os
 import sys
-from dotenv import load_dotenv
 
 # MUST be first Streamlit command
 st.set_page_config(page_title="Azure AI - Agentic Document Generator", layout="wide")
 
-# Load environment variables FIRST before any other imports
-load_dotenv()
+# Load environment variables - works both locally and on Streamlit Cloud
+try:
+    # Try Streamlit Cloud secrets first
+    if hasattr(st, 'secrets') and len(st.secrets) > 0:
+        os.environ['AZURE_OPENAI_KEY'] = st.secrets.get('AZURE_OPENAI_KEY', '')
+        os.environ['AZURE_OPENAI_ENDPOINT'] = st.secrets.get('AZURE_OPENAI_ENDPOINT', '')
+        os.environ['AZURE_ANTHROPIC_KEY'] = st.secrets.get('AZURE_ANTHROPIC_KEY', '')
+        os.environ['AZURE_ANTHROPIC_ENDPOINT'] = st.secrets.get('AZURE_ANTHROPIC_ENDPOINT', '')
+    else:
+        # Fall back to .env file for local development
+        from dotenv import load_dotenv
+        load_dotenv()
+except Exception as e:
+    st.warning(f"Note: Environment variables not loaded: {str(e)}")
 
 from docx import Document
 from docx.shared import Pt, Inches

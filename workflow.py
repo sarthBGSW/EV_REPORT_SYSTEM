@@ -1,9 +1,14 @@
 import sys
 import os
-from dotenv import load_dotenv
 
 # Load environment variables BEFORE importing modules that need them
-load_dotenv()
+# This will be handled by main.py for both local and Streamlit Cloud
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except:
+    pass  # dotenv not required on Streamlit Cloud
+
 print(f"[WORKFLOW] Environment loaded. AZURE_OPENAI_KEY present: {bool(os.getenv('AZURE_OPENAI_KEY'))}", file=sys.stderr)
 
 from langgraph.graph import StateGraph, END
