@@ -1,0 +1,8 @@
+[server]
+headless = true
+address = "127.0.0.1"
+port = 8516
+
+[browser]
+serverAddress = "127.0.0.1"
+serverPort = 8516

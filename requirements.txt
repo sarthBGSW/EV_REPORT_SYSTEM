@@ -1,0 +1,14 @@
+streamlit
+python-dotenv
+langchain
+langchain-openai
+langchain-anthropic
+langchain-ollama
+langchain-community
+langgraph
+duckduckgo-search>=6.0.0
+beautifulsoup4
+requests
+pypdf
+lxml
+python-docx
