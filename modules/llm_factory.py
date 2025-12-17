@@ -1,15 +1,24 @@
 import os
 import sys
 from langchain_openai import AzureChatOpenAI
-from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
 
+# Optional imports with fallbacks
 try:
     from langchain_anthropic import ChatAnthropic
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     print("[LLM FACTORY WARNING] langchain-anthropic not available", file=sys.stderr)
     ANTHROPIC_AVAILABLE = False
+
+# Ollama is optional (only for local development)
+OLLAMA_AVAILABLE = False
+ChatOllama = None
+try:
+    from langchain_ollama import ChatOllama
+    OLLAMA_AVAILABLE = True
+except ImportError:
+    print("[LLM FACTORY INFO] langchain-ollama not available (OK for cloud deployment)", file=sys.stderr)
 
 # Since Azure "Claude" and "Grok" might not have standard LangChain classes yet, 
 # we treat them as OpenAI-compatible or use custom wrappers. 
@@ -114,6 +123,10 @@ def get_llm(model_type="gpt-5-mini"):
 
         # 4. Local Ollama Models (Best for summarization & cost saving)
         elif model_type == "deepseek-r1":
+            if not OLLAMA_AVAILABLE:
+                print(f"[LLM FACTORY WARNING] Ollama not available, using GPT-5 Mini fallback", file=sys.stderr)
+                raise ImportError("langchain-ollama not installed")
+            
             print(f"[LLM FACTORY] Using local Ollama model: deepseek-r1:8b", file=sys.stderr)
             try:
                 # Check if Ollama is available before initializing
@@ -125,6 +138,10 @@ def get_llm(model_type="gpt-5-mini"):
                 raise ConnectionError("Ollama service not available")
         
         elif model_type == "llama3.2":
+            if not OLLAMA_AVAILABLE:
+                print(f"[LLM FACTORY WARNING] Ollama not available, using GPT-5 Mini fallback", file=sys.stderr)
+                raise ImportError("langchain-ollama not installed")
+            
             print(f"[LLM FACTORY] Using local Ollama model: llama3.2", file=sys.stderr)
             try:
                 # Check if Ollama is available before initializing
